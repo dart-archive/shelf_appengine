@@ -11,15 +11,8 @@ import 'package:appengine/appengine.dart' as ae;
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 
-const String CONTEXT_KEY_APPENGINE = 'shelf_appengine.context';
-
 Future serve(Handler handler, {Function onError}) {
   return ae.runAppEngine((io.HttpRequest request) {
-    shelf_io.handleRequest(request, (innerRequest) {
-      var appengineContext = ae.contextFromRequest(request);
-      var ctx = { CONTEXT_KEY_APPENGINE: appengineContext };
-      innerRequest = innerRequest.change(context: ctx);
-      return handler(innerRequest);
-    });
+    shelf_io.handleRequest(request, handler);
   }, onError: onError);
 }

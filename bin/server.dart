@@ -13,10 +13,7 @@ void main() {
 }
 
 Future<Response> _handler(Request request) {
-  var appEngineContext = request.context[shelf_ae.CONTEXT_KEY_APPENGINE]
-      as ae.ClientContext;
-
-  var memcache = appEngineContext.services.memcache;
+  var memcache = ae.context.services.memcache;
 
   var headers = {'Content-Type' : 'text/plain' };
 
