@@ -8,6 +8,8 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf_appengine/shelf_appengine.dart' as shelf_ae;
 import 'package:appengine/appengine.dart' as ae;
 
+/// This is a sample application. It's in the bin directory to follow the
+/// convention of App Engine Dart applications.
 void main() {
   shelf_ae.serve(_handler);
 }
@@ -22,7 +24,8 @@ Future<Response> _handler(Request request) {
   return memcache.increment(memcacheKey).then((value) {
     var body = '''Hello from Shelf
 Requested url: ${request.requestedUri}
-Count: $value''';
+        Count: $value
+          Key: $memcacheKey''';
 
     return new Response.ok(body, headers: headers);
   });
