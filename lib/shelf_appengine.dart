@@ -16,3 +16,20 @@ Future serve(Handler handler, {Function onError}) {
     shelf_io.handleRequest(request, handler);
   }, onError: onError);
 }
+
+final Handler assetHandler = _assetHandler;
+
+_assetHandler(Request request) {
+  var path = request.url.path;
+
+  return ae.context.assets.read(path).then((stream) {
+    return new Response.ok(stream);
+  }, onError: (err, stack) {
+    // TODO(kevmoo): handle only the specific case of an asset not found
+    // https://github.com/dart-lang/appengine/issues/7
+    if (err is ae.AssetError) {
+      return new Response.notFound('not found');
+    }
+    return new Future.error(err, stack);
+  });
+}
