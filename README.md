@@ -1,6 +1,3 @@
-This project assumes you have the following private dart-lang private repos
-synced locally with corresponding directory names.
+A set helpers to make it easy to use [Shelf][shelf] on App Engine.
 
-* https://github.com/dart-lang/appengine
-* https://github.com/dart-lang/cloud_datastore
-* https://github.com/dart-lang/memcache
+[shelf]: https://pub.dartlang.org/packages/shelf
