@@ -2,12 +2,8 @@ name: shelf_appengine
 version: 0.1.0-dev
 description: shelf appengine fun
 dependencies:
-  appengine: any
-  shelf: any
-dependency_overrides:
   appengine:
-    path: ../appengine
-  cloud_datastore:
-    path: ../cloud_datastore
-  memcache:
-    path: ../memcache
+    git:
+      ref: v0.1
+      url: https://github.com/dart-lang/appengine
+  shelf: any
