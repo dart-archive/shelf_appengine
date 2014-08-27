@@ -8,6 +8,7 @@ import 'dart:async';
 import 'dart:io' as io;
 
 import 'package:appengine/appengine.dart' as ae;
+import 'package:mime/mime.dart' as mime;
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 
@@ -23,7 +24,13 @@ _assetHandler(Request request) {
   var path = request.url.path;
 
   return ae.context.assets.read(path).then((stream) {
-    return new Response.ok(stream);
+    Map headers;
+    var contentType = mime.lookupMimeType(path);
+    if (contentType != null) {
+      headers = <String, String>{io.HttpHeaders.CONTENT_TYPE: contentType};
+    }
+
+    return new Response.ok(stream, headers: headers);
   }, onError: (err, stack) {
     // TODO(kevmoo): handle only the specific case of an asset not found
     // https://github.com/dart-lang/appengine/issues/7
