@@ -32,6 +32,8 @@ _assetHandler(Request request) {
 
     return new Response.ok(stream, headers: headers);
   }, onError: (err, stack) {
+    ae.context.services.logging.error('Error getting asset at path $path\n'
+        '$err\n$stack');
     // TODO(kevmoo): handle only the specific case of an asset not found
     // https://github.com/dart-lang/appengine/issues/7
     if (err is ae.AssetError) {
