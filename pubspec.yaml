@@ -1,12 +1,11 @@
 name: shelf_appengine
-version: 0.1.1-dev
+version: 0.1.1
 author: Dart Team <misc@dartlang.org>
 description: shelf appengine fun
 homepage: https://github.com/dart-lang/shelf_appengine
+environment:
+  sdk: '>=1.0.0 <2.0.0'
 dependencies:
-  appengine:
-    git:
-      ref: v0.1
-      url: https://github.com/dart-lang/appengine
+  appengine: '>=0.2.1 <0.3.0'
   mime: '>=0.9.0 <0.10.0'
   shelf: '>=0.5.0 <0.6.0'
