@@ -6,14 +6,30 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf_appengine/shelf_appengine.dart' as shelf_ae;
 import 'package:appengine/appengine.dart' as ae;
 
-/// This is a sample application. It's in the bin directory to follow the
-/// convention of App Engine Dart applications.
+/// This is a sample application.
+///
+/// It's in the bin directory to follow the convention of Dart applications.
 void main() {
   var cascade = new Cascade()
       .add(_handler)
       .add(shelf_ae.assetHandler);
 
-  shelf_ae.serve(cascade.handler);
+  var handler = const Pipeline()
+      .addMiddleware(_rootRewriter)
+      .addHandler(cascade.handler);
+
+  shelf_ae.serve(handler);
+}
+
+/// If a request comes in for the root path, rewrites the path to request
+/// `index.html`.
+Handler _rootRewriter(Handler innerHandler) {
+  return (Request request) {
+    if (request.url.pathSegments.isEmpty) {
+      request = request.change(url: request.url.replace(path: '/index.html'));
+    }
+    return innerHandler(request);
+  };
 }
 
 _handler(Request request) {
