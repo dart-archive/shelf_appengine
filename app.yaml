@@ -2,16 +2,7 @@
 # for details. All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
 
-application: shelf-appengine-example
-version: 1
-runtime: contrib-dart
+runtime: custom
 vm: true
 api_version: 1
-threadsafe: true
-
-manual_scaling:
-  instances: 1
-
-handlers:
-- url: /.*
-  script: bin/server.dart
+version: shelf-appengine-example
