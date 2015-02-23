@@ -12,24 +12,10 @@ import 'package:appengine/appengine.dart' as ae;
 void main() {
   var cascade = new Cascade()
       .add(_handler)
-      .add(shelf_ae.assetHandler);
+      .add(shelf_ae.assetHandler(
+          directoryIndexServeMode: shelf_ae.DirectoryIndexServeMode.SERVE));
 
-  var handler = const Pipeline()
-      .addMiddleware(_rootRewriter)
-      .addHandler(cascade.handler);
-
-  shelf_ae.serve(handler);
-}
-
-/// If a request comes in for the root path, rewrites the path to request
-/// `index.html`.
-Handler _rootRewriter(Handler innerHandler) {
-  return (Request request) {
-    if (request.url.pathSegments.isEmpty) {
-      request = request.change(url: request.url.replace(path: '/index.html'));
-    }
-    return innerHandler(request);
-  };
+  shelf_ae.serve(cascade.handler);
 }
 
 _handler(Request request) {
