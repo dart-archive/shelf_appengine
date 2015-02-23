@@ -10,26 +10,10 @@ import 'package:appengine/appengine.dart' as ae;
 ///
 /// It's in the bin directory to follow the convention of Dart applications.
 void main() {
-  var cascade = new Cascade()
-      .add(_handler)
-      .add(shelf_ae.assetHandler);
+  var cascade = new Cascade().add(_handler).add(shelf_ae.assetHandler(
+      directoryIndexServeMode: shelf_ae.DirectoryIndexServeMode.SERVE));
 
-  var handler = const Pipeline()
-      .addMiddleware(_rootRewriter)
-      .addHandler(cascade.handler);
-
-  shelf_ae.serve(handler);
-}
-
-/// If a request comes in for the root path, rewrites the path to request
-/// `index.html`.
-Handler _rootRewriter(Handler innerHandler) {
-  return (Request request) {
-    if (request.url.pathSegments.isEmpty) {
-      request = request.change(url: request.url.replace(path: '/index.html'));
-    }
-    return innerHandler(request);
-  };
+  shelf_ae.serve(cascade.handler);
 }
 
 _handler(Request request) {
@@ -39,7 +23,7 @@ _handler(Request request) {
 
   var memcache = ae.context.services.memcache;
 
-  var headers = {'Content-Type' : 'text/plain' };
+  var headers = {'Content-Type': 'text/plain'};
 
   var memcacheKey = 'count-${request.requestedUri}';
 
