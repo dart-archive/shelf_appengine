@@ -22,14 +22,25 @@ Future serve(Handler handler, {Function onError}) {
 
 /// Modes available to serve index files in directories.
 class DirectoryIndexServeMode {
-  /// When a directory URI is requested no special actions are taken.
-  static const NO_SERVE = const DirectoryIndexServeMode._internal(0);
+  /// When a directory URI is requested no special actions are taken. This
+  /// usually end up in a 404 Not Found response.
+  static const NONE = const DirectoryIndexServeMode._internal(0);
 
-  /// When a directory URI is requested serve the index file.
+  /// When a directory URI is requested serve the index file directly in the
+  /// response.
   static const SERVE = const DirectoryIndexServeMode._internal(1);
 
-  /// When a directory URI is requested redirect to the index file.
+  /// When a directory URI is requested redirect to the index file with a
+  /// `302 Found` response.
   static const REDIRECT = const DirectoryIndexServeMode._internal(2);
+
+  /// When a directory URI is requested redirect to the index file with a
+  /// `303 See Other` response.
+  static const REDIRECT_SEE_OTHER = const DirectoryIndexServeMode._internal(3);
+
+  /// When a directory URI is requested redirect to the index file with a
+  /// `301 Moved Permanently` response.
+  static const REDIRECT_PERMANENT = const DirectoryIndexServeMode._internal(4);
 
   final int _mode;
 
@@ -41,13 +52,13 @@ class DirectoryIndexServeMode {
 ///
 /// You can choose how/if index files will be served when a directory URI is
 /// requested by setting `directoryIndexServeMode`.
-/// [DirectoryIndexServeMode.NO_SERVE] is the default. See
+/// [DirectoryIndexServeMode.NONE] is the default. See
 /// [DirectoryIndexServeMode] for more options.
 /// The default name of the index files to serve can also be changed using
 /// `indexFileName`. `index.html` is the default.
 //TODO(kevmoo) better docs.
 Handler assetHandler({DirectoryIndexServeMode directoryIndexServeMode:
-                          DirectoryIndexServeMode.NO_SERVE,
+                          DirectoryIndexServeMode.NONE,
                       String indexFileName: "index.html"}) =>
     (Request request) {
       var path = request.url.path;
@@ -59,7 +70,14 @@ Handler assetHandler({DirectoryIndexServeMode directoryIndexServeMode:
           request = request.change(
               url: Uri.parse(request.url.path + indexFileName));
         } else if(directoryIndexServeMode == DirectoryIndexServeMode.REDIRECT) {
+          return new Response.found(request.url.path + indexFileName);
+        } else if(directoryIndexServeMode
+            == DirectoryIndexServeMode.REDIRECT_SEE_OTHER) {
           return new Response.seeOther(request.url.path + indexFileName);
+        } else if(directoryIndexServeMode
+            == DirectoryIndexServeMode.REDIRECT_PERMANENT) {
+          return
+              new Response.movedPermanently(request.url.path + indexFileName);
         }
       }
 
