@@ -1,3 +1,8 @@
+## 0.2.0+1
+
+* Fixing an issue causing the `DirectoryIndexServeMode.SERVE` mode to have no
+  effect.
+
 ## 0.2.0
 
 * Made `assetHandler` a function.
