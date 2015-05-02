@@ -59,7 +59,6 @@ class DirectoryIndexServeMode {
 Handler assetHandler(
     {DirectoryIndexServeMode directoryIndexServeMode: DirectoryIndexServeMode.NONE,
     String indexFileName: "index.html"}) => (Request request) {
-
   var path = request.url.path;
   var indexPath = path + indexFileName;
 
