@@ -2,6 +2,8 @@
 
 * Made `DirectoryIndexServeMode` an enum.
 
+* Support the latest version of `shelf` package.
+
 * Require Dart 1.9 or greater.
 
 ## 0.2.0+1
