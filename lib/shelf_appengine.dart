@@ -59,25 +59,24 @@ class DirectoryIndexServeMode {
 Handler assetHandler(
     {DirectoryIndexServeMode directoryIndexServeMode: DirectoryIndexServeMode.NONE,
     String indexFileName: "index.html"}) => (Request request) {
+  var path = request.url.path;
+  var indexPath = path + indexFileName;
 
   // If the path requested is a directory root we might serve an index.html
   // file depending on [directoryIndexServeMode].
-  if (request.url.path.endsWith("/")) {
+  if (path.endsWith("/")) {
     if (directoryIndexServeMode == DirectoryIndexServeMode.SERVE) {
-      request =
-          request.change(url: Uri.parse(request.url.path + indexFileName));
+      path = indexPath;
     } else if (directoryIndexServeMode == DirectoryIndexServeMode.REDIRECT) {
-      return new Response.found(request.url.path + indexFileName);
+      return new Response.found(indexPath);
     } else if (directoryIndexServeMode ==
         DirectoryIndexServeMode.REDIRECT_SEE_OTHER) {
-      return new Response.seeOther(request.url.path + indexFileName);
+      return new Response.seeOther(indexPath);
     } else if (directoryIndexServeMode ==
         DirectoryIndexServeMode.REDIRECT_PERMANENT) {
-      return new Response.movedPermanently(request.url.path + indexFileName);
+      return new Response.movedPermanently(indexPath);
     }
   }
-
-  var path = request.url.path;
 
   return ae.context.assets.read(path).then((stream) {
     Map headers;
