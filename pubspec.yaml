@@ -1,14 +1,14 @@
 name: shelf_appengine
 version: 0.2.1-dev
 author: Dart Team <misc@dartlang.org>
-description: shelf appengine fun
+description: Integration for the appengine and shelf packages
 homepage: https://github.com/dart-lang/shelf_appengine
 environment:
-  sdk: '>=1.0.0 <2.0.0'
+  sdk: '>=1.9.0 <2.0.0'
 dependencies:
-  appengine: '>=0.2.1 <0.3.0'
-  mime: '>=0.9.0 <0.10.0'
-  shelf: '>=0.6.0 <0.7.0'
+  appengine: ^0.2.1
+  mime: ^0.9.0
+  shelf: ^0.6.0
 dev_dependencies:
-  http: '>=0.11.2 <0.12.0'
-  unittest: '>=0.11.0 <0.12.0'
+  http: ^0.11.2
+  unittest: ^0.11.0

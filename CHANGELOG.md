@@ -2,6 +2,8 @@
 
 * Made `DirectoryIndexServeMode` an enum.
 
+* Require Dart 1.9 or greater.
+
 ## 0.2.0+1
 
 * Fixing an issue causing the `DirectoryIndexServeMode.SERVE` mode to have no

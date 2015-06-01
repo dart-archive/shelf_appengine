@@ -54,7 +54,7 @@ enum DirectoryIndexServeMode {
 //TODO(kevmoo) better docs.
 Handler assetHandler(
     {DirectoryIndexServeMode directoryIndexServeMode: DirectoryIndexServeMode.NONE,
-    String indexFileName: "index.html"}) => (Request request) {
+    String indexFileName: "index.html"}) => (Request request) async {
   var path = request.url.path;
   var indexPath = path + indexFileName;
 
@@ -74,7 +74,9 @@ Handler assetHandler(
     }
   }
 
-  return ae.context.assets.read(path).then((stream) {
+  try {
+    var stream = await ae.context.assets.read(path);
+
     Map headers;
     var contentType = mime.lookupMimeType(path);
     if (contentType != null) {
@@ -82,7 +84,7 @@ Handler assetHandler(
     }
 
     return new Response.ok(stream, headers: headers);
-  }, onError: (err, stack) {
+  } catch (err, stack) {
     ae.context.services.logging
         .error('Error getting asset at path $path\n$err\n$stack');
     // TODO(kevmoo): handle only the specific case of an asset not found
@@ -90,6 +92,6 @@ Handler assetHandler(
     if (err is ae.AssetError) {
       return new Response.notFound('not found');
     }
-    return new Future.error(err, stack);
-  });
+    rethrow;
+  }
 };
