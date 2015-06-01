@@ -1,3 +1,7 @@
+## 0.2.2
+
+* Support latest release of `appengine` package.
+
 ## 0.2.1
 
 * Made `DirectoryIndexServeMode` an enum.
