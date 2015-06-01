@@ -1,3 +1,7 @@
+## 0.2.1
+
+* Made `DirectoryIndexServeMode` an enum.
+
 ## 0.2.0+1
 
 * Fixing an issue causing the `DirectoryIndexServeMode.SERVE` mode to have no

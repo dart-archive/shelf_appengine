@@ -21,30 +21,26 @@ Future serve(Handler handler, {Function onError}) {
 }
 
 /// Modes available to serve index files in directories.
-class DirectoryIndexServeMode {
+enum DirectoryIndexServeMode {
   /// When a directory URI is requested no special actions are taken. This
   /// usually end up in a 404 Not Found response.
-  static const NONE = const DirectoryIndexServeMode._internal(0);
+  NONE,
 
   /// When a directory URI is requested serve the index file directly in the
   /// response.
-  static const SERVE = const DirectoryIndexServeMode._internal(1);
+  SERVE,
 
   /// When a directory URI is requested redirect to the index file with a
   /// `302 Found` response.
-  static const REDIRECT = const DirectoryIndexServeMode._internal(2);
+  REDIRECT,
 
   /// When a directory URI is requested redirect to the index file with a
   /// `303 See Other` response.
-  static const REDIRECT_SEE_OTHER = const DirectoryIndexServeMode._internal(3);
+  REDIRECT_SEE_OTHER,
 
   /// When a directory URI is requested redirect to the index file with a
   /// `301 Moved Permanently` response.
-  static const REDIRECT_PERMANENT = const DirectoryIndexServeMode._internal(4);
-
-  final int _mode;
-
-  const DirectoryIndexServeMode._internal(this._mode);
+  REDIRECT_PERMANENT
 }
 
 /// Serves files using [ae.context.assets].
