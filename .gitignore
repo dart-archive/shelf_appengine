@@ -1,4 +1,5 @@
 packages
 pubspec.lock
 .pub
-build
+/build
+build/web/packages
