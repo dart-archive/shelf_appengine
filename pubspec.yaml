@@ -1,5 +1,5 @@
 name: shelf_appengine
-version: 0.2.2
+version: 0.2.2+1
 author: Dart Team <misc@dartlang.org>
 description: Integration for the appengine and shelf packages
 homepage: https://github.com/dart-lang/shelf_appengine

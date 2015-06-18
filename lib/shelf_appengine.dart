@@ -10,6 +10,7 @@ import 'dart:io' as io;
 
 import 'package:appengine/appengine.dart' as ae;
 import 'package:mime/mime.dart' as mime;
+import 'package:path/path.dart' as p;
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 
@@ -56,11 +57,18 @@ Handler assetHandler(
     {DirectoryIndexServeMode directoryIndexServeMode: DirectoryIndexServeMode.NONE,
     String indexFileName: "index.html"}) => (Request request) async {
   var path = request.url.path;
-  var indexPath = path + indexFileName;
+  var indexPath = p.join(path, indexFileName);
+
+  bool isBarePath = false;
+  if (path.isEmpty) {
+    isBarePath = request.handlerPath.endsWith('/');
+  } else if (path.endsWith('/')) {
+    isBarePath = true;
+  }
 
   // If the path requested is a directory root we might serve an index.html
   // file depending on [directoryIndexServeMode].
-  if (path.endsWith("/")) {
+  if (isBarePath) {
     if (directoryIndexServeMode == DirectoryIndexServeMode.SERVE) {
       path = indexPath;
     } else if (directoryIndexServeMode == DirectoryIndexServeMode.REDIRECT) {
@@ -72,6 +80,13 @@ Handler assetHandler(
         DirectoryIndexServeMode.REDIRECT_PERMANENT) {
       return new Response.movedPermanently(indexPath);
     }
+  }
+
+  // When serving off the file system, the appengine AssetManager just joins
+  // the root with the path w/ '+' – need to make sure that's a clean concat
+  // TODO(kevmoo) should likely open an issue on this.
+  if (!path.startsWith('/')) {
+    path = '/' + path;
   }
 
   try {

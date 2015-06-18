@@ -1,3 +1,7 @@
+## 0.2.2+1
+
+* Better handling of default document serving.
+
 ## 0.2.2
 
 * Support latest release of `appengine` package.
