@@ -5,7 +5,7 @@
 import 'dart:async';
 
 import 'package:http/http.dart' as http;
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 
 final _serverUri = Uri.parse('http://localhost:8080');
 
