@@ -9,16 +9,46 @@ import 'dart:async';
 import 'dart:io' as io;
 
 import 'package:appengine/appengine.dart' as ae;
-import 'package:mime/mime.dart' as mime;
 import 'package:path/path.dart' as p;
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 
+import 'package:stack_trace/stack_trace.dart';
+
 /// Serves the provided [handler] using [ae.runAppEngine].
 Future serve(Handler handler, {Function onError}) {
+  handler = _wrap(handler);
   return ae.runAppEngine((io.HttpRequest request) {
-    shelf_io.handleRequest(request, handler);
+    Chain.capture(() {
+      shelf_io.handleRequest(request, handler);
+    }, onError: (error, chain) {
+      if (error is UnsupportedError) {
+        // Very specific to the implementation in AppEngine
+        if (error.message == "You cannot detach the socket from "
+            "AppengineHttpResponse implementation.") {
+          return;
+        }
+      }
+      throw error;
+    });
   }, onError: onError);
+}
+
+Handler _wrap(Handler source) {
+  return (Request request) async {
+    var response = await source(request);
+
+    if (response is AppEngineAssetResponse) {
+      ae.context.assets.serve(response._desiredPath);
+
+      // This causes a fast-fail without writing to the response – 
+      // it requires catching the UnsupportedError in `serve` above
+      request.hijack((a, b) {
+        // Intentional NOOP
+      });
+    }
+    return response;
+  };
 }
 
 /// Modes available to serve index files in directories.
@@ -89,24 +119,18 @@ Handler assetHandler(
     path = '/' + path;
   }
 
-  try {
-    var stream = await ae.context.assets.read(path);
-
-    Map headers;
-    var contentType = mime.lookupMimeType(path);
-    if (contentType != null) {
-      headers = <String, String>{io.HttpHeaders.CONTENT_TYPE: contentType};
-    }
-
-    return new Response.ok(stream, headers: headers);
-  } catch (err, stack) {
-    ae.context.services.logging
-        .error('Error getting asset at path $path\n$err\n$stack');
-    // TODO(kevmoo): handle only the specific case of an asset not found
-    // https://github.com/dart-lang/appengine/issues/7
-    if (err is ae.AssetError) {
-      return new Response.notFound('not found');
-    }
-    rethrow;
-  }
+  return new AppEngineAssetResponse._(path);
 };
+
+class AppEngineAssetResponse implements Response {
+  final String _desiredPath;
+
+  int get statusCode => 200;
+
+  AppEngineAssetResponse._(this._desiredPath);
+
+  noSuchMethod(Invocation inv) {
+    throw new UnsupportedError('This response designed to pass through'
+        ' to the root handler. You cannot access its data in middleware.');
+  }
+}
