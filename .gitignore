@@ -3,3 +3,4 @@ pubspec.lock
 .pub
 /build
 build/web/packages
+.packages
