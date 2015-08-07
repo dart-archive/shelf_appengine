@@ -1,9 +1,3 @@
-## 0.3.0
-
-* Big change to how `assetHandler` deals with assets. It allows timestamp-based
-  caching, but it requires a very strict response model that may break
-  middleware that needs to access the response body.
-
 ## 0.2.2+1
 
 * Better handling of default document serving.
