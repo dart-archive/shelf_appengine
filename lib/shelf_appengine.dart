@@ -15,10 +15,13 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 
 /// Serves the provided [handler] using [ae.runAppEngine].
-Future serve(Handler handler, {Function onError}) {
+///
+/// If [port] is not provided or `null`, `8080` is used.
+Future serve(Handler handler, {int port, Function onError}) {
+  if (port == null) port = 8080;
   return ae.runAppEngine((io.HttpRequest request) {
     shelf_io.handleRequest(request, handler);
-  }, onError: onError);
+  }, onError: onError, port: port);
 }
 
 /// Modes available to serve index files in directories.

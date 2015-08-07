@@ -1,3 +1,7 @@
+## 0.2.3
+
+* Added `port` argument to `serve` function. Requires `appengine >= 0.3.1`.
+
 ## 0.2.2+1
 
 * Better handling of default document serving.
