@@ -56,7 +56,6 @@ void _runTest(DirectoryIndexServeMode mode, int dirCode, bool withPubServe) {
   String workingDir() => p.join(tempDir.path, 'pkg');
 
   setUp(() {
-
     // set up the dir
     schedule(() async {
       var dir = await Directory.systemTemp.createTemp('shelf_appengine.test.');
@@ -66,15 +65,15 @@ void _runTest(DirectoryIndexServeMode mode, int dirCode, bool withPubServe) {
     });
 
     schedule(() async {
-      d
-          .dir('pkg', [
+      d.dir('pkg', [
         d.file('Dockerfile', _dockerFile),
         d.file('app.yaml', _getAppYaml(withPubServe)),
         d.file('pubspec.yaml', _pubspecYaml),
         d.dir('bin', [d.file('server.dart', _getServerCode(mode))]),
-        d.dir('build', [d.dir('web', [d.file('index.html', _indexHtml)])])
-      ])
-          .create();
+        d.dir('build', [
+          d.dir('web', [d.file('index.html', _indexHtml)])
+        ])
+      ]).create();
     });
 
     // pub build
@@ -92,18 +91,21 @@ void _runTest(DirectoryIndexServeMode mode, int dirCode, bool withPubServe) {
       var adminPort = await _getOpenPort();
       var adminHost = 'localhost:$adminPort';
 
-      appEngineProcess = await Process.start('gcloud', [
-        '--project',
-        'shelf-appengine-test',
-        'preview',
-        'app',
-        'run',
-        'app.yaml',
-        '--host',
-        defaultHost,
-        '--admin-host',
-        adminHost
-      ], workingDirectory: workingDir());
+      appEngineProcess = await Process.start(
+          'gcloud',
+          [
+            '--project',
+            'shelf-appengine-test',
+            'preview',
+            'app',
+            'run',
+            'app.yaml',
+            '--host',
+            defaultHost,
+            '--admin-host',
+            adminHost
+          ],
+          workingDirectory: workingDir());
 
       var waitingForNext = false;
 
