@@ -1,3 +1,7 @@
+## 0.3.0-alpha
+
+* Starting on `flex` support with `pkg/appengine` v`0.4.0-flex.alpha.0+4`.
+
 ## 0.2.3
 
 * Added `port` argument to `serve` function. Requires `appengine >= 0.3.1`.
