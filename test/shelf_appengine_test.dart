@@ -9,8 +9,8 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
-import 'package:scheduled_test/scheduled_test.dart';
-import 'package:scheduled_test/descriptor.dart' as d;
+import 'package:test/test.dart';
+import 'package:test_descriptor/test_descriptor.dart' as d;
 
 import 'package:shelf_appengine/shelf_appengine.dart';
 
@@ -49,174 +49,152 @@ void _runModes(bool withPubServe) {
 }
 
 void _runTest(DirectoryIndexServeMode mode, int dirCode, bool withPubServe) {
-  Directory tempDir;
   Process appEngineProcess;
   Process pubServeProcess;
 
-  String workingDir() => p.join(tempDir.path, 'pkg');
+  String workingDir() => p.join(d.sandbox, 'pkg');
 
-  setUp(() {
-    // set up the dir
-    schedule(() async {
-      var dir = await Directory.systemTemp.createTemp('shelf_appengine.test.');
-
-      tempDir = dir;
-      d.defaultRoot = tempDir.path;
-    });
-
-    schedule(() async {
-      d.dir('pkg', [
-        d.file('Dockerfile', _dockerFile),
-        d.file('app.yaml', _getAppYaml(withPubServe)),
-        d.file('pubspec.yaml', _pubspecYaml),
-        d.dir('bin', [d.file('server.dart', _getServerCode(mode))]),
-        d.dir('build', [
-          d.dir('web', [d.file('index.html', _indexHtml)])
-        ])
-      ]).create();
-    });
+  setUp(() async {
+    await d.dir('pkg', [
+      d.file('Dockerfile', _dockerFile),
+      d.file('app.yaml', _getAppYaml(withPubServe)),
+      d.file('pubspec.yaml', _pubspecYaml),
+      d.dir('bin', [d.file('server.dart', _getServerCode(mode))]),
+      d.dir('build', [
+        d.dir('web', [d.file('index.html', _indexHtml)])
+      ])
+    ]).create();
 
     // pub build
-    schedule(() {
-      var result = Process.runSync('pub', ['install', '--offline'],
-          workingDirectory: workingDir());
+    var result = Process.runSync('pub', ['install', '--offline'],
+        workingDirectory: workingDir());
 
-      expect(result.exitCode, 0);
-    });
+    expect(result.exitCode, 0);
 
-    schedule(() async {
-      var hostPort = await _getOpenPort();
-      var defaultHost = 'localhost:$hostPort';
+    var hostPort = await _getOpenPort();
+    var defaultHost = 'localhost:$hostPort';
 
-      var adminPort = await _getOpenPort();
-      var adminHost = 'localhost:$adminPort';
+    var adminPort = await _getOpenPort();
+    var adminHost = 'localhost:$adminPort';
 
-      appEngineProcess = await Process.start(
-          'gcloud',
-          [
-            '--project',
-            'shelf-appengine-test',
-            'preview',
-            'app',
-            'run',
-            'app.yaml',
-            '--host',
-            defaultHost,
-            '--admin-host',
-            adminHost
-          ],
-          workingDirectory: workingDir());
+    appEngineProcess = await Process.start(
+        'gcloud',
+        [
+          '--project',
+          'shelf-appengine-test',
+          'preview',
+          'app',
+          'run',
+          'app.yaml',
+          '--host',
+          defaultHost,
+          '--admin-host',
+          adminHost
+        ],
+        workingDirectory: workingDir());
 
-      var waitingForNext = false;
+    var waitingForNext = false;
 
-      Completer answerCompleter = new Completer();
+    Completer answerCompleter = new Completer();
 
-      StreamSubscription sub;
+    StreamSubscription sub;
 
-      sub = _getLines(appEngineProcess.stderr).listen((line) {
-        print(line);
-        if (answerCompleter.isCompleted) return;
+    sub = _getLines(appEngineProcess.stderr).listen((line) {
+      print(line);
+      if (answerCompleter.isCompleted) return;
 
-        if (line.startsWith('ERROR:')) {
-          answerCompleter.completeError(line);
-          sub.cancel();
-          return;
-        }
-
-        if (line.contains('New instance for module "default" serving on:')) {
-          waitingForNext = true;
-        } else if (waitingForNext) {
-          answerCompleter.complete(line);
-
-          // NOTE: comment out this cancel to see what's going on
-          // sub.cancel();
-        }
-      });
-
-      _serverUri = Uri.parse(await answerCompleter.future);
-    });
-    // TODO: wait for the right output?
-
-    // TODO: kill pub server, if we're doing that
-
-    currentSchedule.onComplete.schedule(() async {
-      if (appEngineProcess != null) {
-        int rootPid = appEngineProcess.pid;
-
-        // NOW! *sigh* go looking for child processes of the just kill process
-        var result = Process.runSync('ps', ['-o', 'pid, ppid']);
-
-        if (result.exitCode == 0) {
-          //print([result.stdout, result.stderr]);
-
-          var parentTree = new Map<int, Set<int>>();
-
-          for (var match in _pidRegexp.allMatches(result.stdout)) {
-            var pid = int.parse(match[1]);
-            var ppid = int.parse(match[2]);
-
-            var parentSet = parentTree.putIfAbsent(ppid, () => new Set<int>());
-            parentSet.add(pid);
-          }
-
-          //print(parentTree);
-
-          var toKill = new LinkedHashSet<int>();
-          var toProcess = <int>[rootPid];
-
-          //print("root pid: $rootPid");
-
-          while (toProcess.isNotEmpty) {
-            var current = toProcess.removeLast();
-            toKill.add(current);
-
-            var kids = parentTree[current];
-
-            if (kids == null) {
-              continue;
-            }
-
-            toProcess.addAll(kids);
-          }
-
-          //print(toKill);
-
-          for (var pid in toKill) {
-            //print('killing $pid');
-            var output = Process.killPid(pid);
-            expect(output, isTrue);
-            //print('Success: $output');
-          }
-        }
-
-        // print("waiting for things to die...");
-        await appEngineProcess.exitCode;
-        appEngineProcess = null;
+      if (line.startsWith('ERROR:')) {
+        answerCompleter.completeError(line);
+        sub.cancel();
+        return;
       }
 
-      if (pubServeProcess != null) {
-        pubServeProcess.kill(ProcessSignal.SIGTERM);
+      if (line.contains('New instance for module "default" serving on:')) {
+        waitingForNext = true;
+      } else if (waitingForNext) {
+        answerCompleter.complete(line);
 
-        await pubServeProcess.exitCode;
+        // NOTE: comment out this cancel to see what's going on
+        // sub.cancel();
+      }
+    });
+
+    _serverUri = Uri.parse(await answerCompleter.future);
+  });
+  // TODO: wait for the right output?
+
+  // TODO: kill pub server, if we're doing that
+
+  tearDown(() async {
+    if (appEngineProcess != null) {
+      int rootPid = appEngineProcess.pid;
+
+      // NOW! *sigh* go looking for child processes of the just kill process
+      var result = Process.runSync('ps', ['-o', 'pid, ppid']);
+
+      if (result.exitCode == 0) {
+        //print([result.stdout, result.stderr]);
+
+        var parentTree = new Map<int, Set<int>>();
+
+        for (var match in _pidRegexp.allMatches(result.stdout)) {
+          var pid = int.parse(match[1]);
+          var ppid = int.parse(match[2]);
+
+          var parentSet = parentTree.putIfAbsent(ppid, () => new Set<int>());
+          parentSet.add(pid);
+        }
+
+        //print(parentTree);
+
+        var toKill = new LinkedHashSet<int>();
+        var toProcess = <int>[rootPid];
+
+        //print("root pid: $rootPid");
+
+        while (toProcess.isNotEmpty) {
+          var current = toProcess.removeLast();
+          toKill.add(current);
+
+          var kids = parentTree[current];
+
+          if (kids == null) {
+            continue;
+          }
+
+          toProcess.addAll(kids);
+        }
+
+        //print(toKill);
+
+        for (var pid in toKill) {
+          //print('killing $pid');
+          var output = Process.killPid(pid);
+          expect(output, isTrue);
+          //print('Success: $output');
+        }
       }
 
-      d.defaultRoot = null;
-      return tempDir.delete(recursive: true);
-    });
+      // print("waiting for things to die...");
+      await appEngineProcess.exitCode;
+      appEngineProcess = null;
+    }
+
+    if (pubServeProcess != null) {
+      pubServeProcess.kill(ProcessSignal.SIGTERM);
+
+      await pubServeProcess.exitCode;
+    }
   });
 
-  test("Request 'dir'", () {
-    schedule(() async {
-      var target = _serverUri.resolve('/');
-      var statusCode = await _getNoRedirect(target);
-      expect(statusCode, dirCode);
-    });
+  test("Request 'dir'", () async {
+    var target = _serverUri.resolve('/');
+    var statusCode = await _getNoRedirect(target);
+    expect(statusCode, dirCode);
 
-    schedule(() async {
-      var target = _serverUri.resolve('/index.html');
-      var statusCode = await _getNoRedirect(target);
-      expect(statusCode, 200);
-    });
+    target = _serverUri.resolve('/index.html');
+    statusCode = await _getNoRedirect(target);
+    expect(statusCode, 200);
   }, timeout: new Timeout(const Duration(minutes: 3)));
 }
 
